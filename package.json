@@ -1,0 +1,22 @@
+{
+  "name": "gql-poc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-boost": "^0.4.7",
+    "apollo-link-batch-http": "^1.2.13",
+    "apollo-server": "^2.9.16",
+    "es6-promise": "^4.2.8",
+    "graphql": "^14.6.0",
+    "isomorphic-fetch": "^2.2.1"
+  },
+  "devDependencies": {
+    "typescript": "^3.7.5"
+  }
+}
