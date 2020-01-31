@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "client-http": "ts-node client.ts",
+    "client-batch": "BATCH=true ts-node client.ts",
+    "naive-server": "ts-node src/servers/naive.server.ts",
+    "data-loader-server": "ts-node src/servers/data-loader.server.ts",
+    "optimized-data-loader-server": "ts-node src/servers/optimized-data-loader.server.ts"
   },
   "author": "",
   "license": "ISC",
@@ -12,11 +17,14 @@
     "apollo-boost": "^0.4.7",
     "apollo-link-batch-http": "^1.2.13",
     "apollo-server": "^2.9.16",
+    "dataloader": "^2.0.0",
     "es6-promise": "^4.2.8",
     "graphql": "^14.6.0",
     "isomorphic-fetch": "^2.2.1"
   },
   "devDependencies": {
+    "prettier": "^1.19.1",
+    "ts-node": "^8.6.2",
     "typescript": "^3.7.5"
   }
 }

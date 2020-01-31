@@ -1,0 +1,27 @@
+type SearchResults {
+  results: [Item!]!
+  pagination: Pagination!
+}
+
+type Item {
+  id: ID!
+  name: String!
+  price: Price!
+}
+
+type Price {
+  currency: String!
+  amount: Float!
+}
+
+type Pagination {
+  page: Int!
+  pageSize: Int!
+  totalPages: Int!
+  totalResults: Int!
+}
+
+type Query {
+  searchItems(searchTerm: String!, page: Int!, pageSize: Int!): SearchResults!
+  allItems: [Item!]!
+}
