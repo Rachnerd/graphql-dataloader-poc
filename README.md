@@ -1,4 +1,7 @@
-# Batching POC
+# Batching DEMO
+
+This repo contains demonstrations of servers with and without [data-loader](https://www.npmjs.com/package/dataloader)
+and clients with and without [batching](https://www.npmjs.com/package/apollo-link-batch-http).
 
 Each server example can be called via the playground (http://localhost:4000) or a client.
 
@@ -184,7 +187,7 @@ Conclusion:
 - Server hits the SearchService twice because of the query split.
 - Server hits the PriceService for each item.
 
-When we switch from http link to batch http link in the client, the client out changes to:
+When we switch from http link to batch http link in the client, the client output changes to:
 
 ```
 14:12:12.544: Send queries
@@ -277,9 +280,8 @@ npm run optimized-data-loader-server
 ```
 
 KrampHub is currently seeing the resource sequence as an issue because Item and Price should be fetched in parallel.
-Each normal GQL server implementation will wait for Item to be finished before fetching the Price because of the schema
-structure. KrampHub also doesn't want to change the schema to fit the MicroServices, so **a** way of "solving" this issue
-without changing the schema, is looking ahead on Query resolver level.
+Each normal GQL server implementation will wait for Item to be resolved before fetching the Price. KrampHub doesn't 
+want to change the schema to fit the MicroServices, so **a** way of "solving" this issue without changing the schema, is looking ahead on Query resolver level.
 
 ```
 {
