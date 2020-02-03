@@ -21,14 +21,8 @@ Each server example can be called via the playground (http://localhost:4000) or 
 ## Data-loader (server)
 
 Data-loader is a tool by GraphQL that groups single calls to a service/system into one batch request. A data-loader collects
-all arguments it receives within 1 tick of the event loop (NodeJS), passes them to a batch function and then returns the results
-back to each caller (in the same order as the input arguments).
-
-Looking at our schema we can identify 2 use-cases for data-loader:
-
-- A price is fetched for each Item, which means that 10 items will trigger 10 calls to the price service.
-- A search can potentially duplicate calls to the search service if multiple queries with the same arguments are present
-  in the request (which occurs frequently if the clients follow the best practices).
+all arguments it receives from callers within 1 tick of the event loop (NodeJS) and passes them to a batch function. The batch
+function is responsible for fetching the requested data and returning it in a collection that matches the order of the input arguments.
 
 **_Each data-loader instance caches its returned values, so it is important to reinstantiate data-loaders on each request._**
 
@@ -51,6 +45,12 @@ const server = new ApolloServer({
   resolvers: { ... }
 }
 ```
+
+Looking at our schema we can identify 2 use-cases for data-loader:
+
+- Simple: A price is fetched for each Item, which means that 10 items will trigger 10 calls to the price service.
+- Complex: The `searchItems` query can be split by the frontend into separate queries (which is considered a good practice). 
+This means that conditional batching based on sets of arguments is required to minimize the amount of calls.
 
 #### Simple data-loader
 
