@@ -12,10 +12,13 @@ export const searchDataLoaderFactory = (searchService: SearchService) =>
     /**
      * Reduce all page options to a map of unique options + corresponding call supplier.
      */
-    const callMap = allPageOptions.reduce((acc, value) => ({
-      ...acc,
-      [toKey(value)]: () => searchService.search(value.page, value.pageSize)
-    }), {});
+    const callMap = allPageOptions.reduce(
+      (acc, value) => ({
+        ...acc,
+        [toKey(value)]: () => searchService.search(value.page, value.pageSize)
+      }),
+      {}
+    );
 
     /**
      * Execute calls and reduce them to a map of key and result

@@ -20,7 +20,7 @@ Each server example can be called via the playground (http://localhost:4000) or 
 Server concerns:
 
 - A client can send multiple queries in one request.
-- Queries (within the same request) can contain parts of a resource split over multiple queries which leads to unnecessary grpc calls.
+- Queries (within the same request) can contain overlapping resources which results in more service calls than needed.
 
 ### Naive server implementation.
 
@@ -60,7 +60,7 @@ The naive server implements resolvers without using data-loader.
 }
 ```
 
-This works find for a simple query that hits all available resources:
+This works fine for a simple query that hits all available resources:
 
 ```graphql
 {

@@ -1,4 +1,9 @@
-import { ApolloClient, ApolloLink, HttpLink, InMemoryCache } from "apollo-boost";
+import {
+  ApolloClient,
+  ApolloLink,
+  HttpLink,
+  InMemoryCache
+} from "apollo-boost";
 import "isomorphic-fetch";
 import { BatchHttpLink } from "apollo-link-batch-http";
 import { queryServer } from "./queries/client.queries";

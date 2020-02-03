@@ -3,7 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { SearchService } from "../services/search.service";
 import { ItemService } from "../services/item.service";
-import { hasQueried, log, normalize } from "../utils";
+import { log } from "../utils";
 import { PriceService } from "../services/price.service";
 import { searchDataLoaderFactory } from "../data-loader/search.data-loader";
 import { priceDataLoaderFactory } from "../data-loader/price.data-loader";
