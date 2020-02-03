@@ -217,7 +217,7 @@ Conclusion:
 
 _From this point onwards we're going to ignore the slow 5000ms call because parallel execution in combination with batching is already demonstrated._
 
-### Data-loader.
+### Data-loader simple + difficult use-case.
 
 Data-loader is a tool by GraphQL that groups single calls to a service/system into one batch request. A data-loader collects
 all arguments it receives within 1 tick of the event loop, then calls the provided batch function and redistributes batch
@@ -538,8 +538,8 @@ Search (1 time)
 
 Client concerns:
 
-- Splitting resources in queries can only be optimized by the server if batched together.
-- A client can potentially batch very heavy queries with light queries what result in load times longer than necessary.
+- Splitting resources in queries can only be optimized by the server if they're batched together.
+- A client can potentially batch very heavy queries with light queries what results in load times longer than necessary.
 
 For this section the clients will communicate with the "optimized" server to reduce the response times as much as possible.
 
