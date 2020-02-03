@@ -255,6 +255,8 @@ const server = new ApolloServer({
 
 The easiest use-case for data-loader is batching single `getById` calls into one `getByIds` call.
 
+[price.data-loader.ts](src/data-loaders/price.data-loader.ts)
+
 ```typescript
 export const priceDataLoaderFactory = (priceService: PriceService) =>
   new DataLoader(
@@ -302,6 +304,8 @@ Steps to achieve multiple conditional batches within one data-loader:
 - Group calls by unique sets of arguments.
 - Perform the batch for each group (in parallel).
 - Flatten and sort the results to match the input order.
+
+[search.data-loader.ts](src/data-loaders/search.data-loader.ts)
 
 ```typescript
 /**
@@ -541,6 +545,8 @@ For this section the clients will communicate with the "optimized" server to red
 
 The following clients will query:
 
+[client.queries.ts](src/clients/queries/client.queries.ts)
+
 ```graphql
 query SearchResults {
   searchItems(searchTerm: "", page: 0, pageSize: 5) {
@@ -584,6 +590,8 @@ query AllItems {
 
 ### Http client
 
+[http.client.ts](src/clients/http.client.ts)
+
 The regular http-link will send a request for each detected query regardless of overlap.
 
 ```
@@ -603,6 +611,8 @@ Conclusion:
 - Overlap in queries can't be optimized by the server due to the fact that data-loader works on request basis.
 
 ### Batch client
+
+[batch.client.ts](src/clients/batch.client.ts)
 
 The batch-http-link will send one request for all detected queries.
 
@@ -624,6 +634,8 @@ Conclusion:
 - Server can optimize the queries because they're sent within the same request.
 
 ### Http/batch split client
+
+[split-http-batch.client.ts](src/clients/split-http-batch.client.ts)
 
 The most efficient strategy for clients is to combine the http and batch link and manually blacklist queries from batching.
 This can be done by using ApolloLink's `split` function:

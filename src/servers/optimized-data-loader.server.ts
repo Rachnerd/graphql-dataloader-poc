@@ -5,9 +5,9 @@ import { SearchService } from "../services/search.service";
 import { ItemService } from "../services/item.service";
 import { hasQueried, log, normalize } from "../utils";
 import { PriceService } from "../services/price.service";
-import { searchDataLoaderFactory } from "../data-loader/search.data-loader";
-import { priceDataLoaderFactory } from "../data-loader/price.data-loader";
-import { itemDataLoaderFactory } from "../data-loader/item.data-loader";
+import { searchDataLoaderFactory } from "../data-loaders/search.data-loader";
+import { priceDataLoaderFactory } from "../data-loaders/price.data-loader";
+import { itemDataLoaderFactory } from "../data-loaders/item.data-loader";
 
 const schemaFilePath = path.resolve(__dirname, "../", "schema.graphql");
 const schemaString = fs.readFileSync(schemaFilePath, "utf8");
