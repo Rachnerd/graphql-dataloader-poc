@@ -7,7 +7,7 @@ Each server example can be called via the playground (http://localhost:4000) or 
 
 - [Server performance](#markdown-header-server-side-performance)
     - [Naive server](#markdown-header-naive-server-implementation)
-    - [Data-loader](#markdown-header-data-loader)
+    - [Data-loader simple + difficult use-case](#markdown-header-data-loader-simple-difficult-use-case)
     - [Data-loader server](#markdown-header-data-loader-server-implementation)
     - [Optimized data-loader server](#markdown-header-optimized-data-loader-server-anti-pattern)
 
