@@ -1,21 +1,39 @@
 import * as DataLoader from "dataloader";
 import { SearchService } from "../services/search.service";
 
-const toKey = ({ page, pageSize }) => `page:${page}pageSize:${pageSize}`;
+interface SearchArguments {
+  searchTerm: string;
+  page: number;
+  pageSize: number;
+}
 
 /**
- * This is a demonstration of a rather complex case where multiple parameters determine which calls have to be made.
- * The service will be hit with each unique combination of parameters.
+ * Create a key representing combinations of arguments.
+ */
+const toUniqueArgumentsKey = ({
+  searchTerm,
+  page,
+  pageSize
+}: SearchArguments) =>
+  `searchTerm:${searchTerm},page:${page},pageSize:${pageSize}`;
+
+/**
+ * Data-loader that batches calls based on their arguments.
  */
 export const searchDataLoaderFactory = (searchService: SearchService) =>
-  new DataLoader(async (allPageOptions: { page; pageSize }[]) => {
+  new DataLoader(async (allSearchArguments: SearchArguments[]) => {
     /**
-     * Reduce all page options to a map of unique options + corresponding call supplier.
+     * Reduce all search options to a map of unique options + corresponding call supplier.
      */
-    const callMap = allPageOptions.reduce(
-      (acc, value) => ({
+    const callMap = allSearchArguments.reduce(
+      (acc, searchArguments) => ({
         ...acc,
-        [toKey(value)]: () => searchService.search(value.page, value.pageSize)
+        [toUniqueArgumentsKey(searchArguments)]: () =>
+          searchService.search(
+            searchArguments.searchTerm,
+            searchArguments.page,
+            searchArguments.pageSize
+          )
       }),
       {}
     );
@@ -38,7 +56,9 @@ export const searchDataLoaderFactory = (searchService: SearchService) =>
     );
 
     /**
-     * Map all page options to corresponding results
+     * Map all search options to corresponding results
      */
-    return allPageOptions.map(pageOptions => resultsMap[toKey(pageOptions)]);
+    return allSearchArguments.map(
+      searchOptions => resultsMap[toUniqueArgumentsKey(searchOptions)]
+    );
   });

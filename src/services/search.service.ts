@@ -7,7 +7,7 @@ for (let i = 0; i < 200; i++) {
 }
 
 export class SearchService {
-  async search(page: number, pageSize: number) {
+  async search(searchTerm: string, page: number, pageSize: number) {
     const delay = 200;
     return delayedValue(
       {

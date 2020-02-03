@@ -6,7 +6,6 @@ import { PriceService } from "../services/price.service";
  */
 export const priceDataLoaderFactory = (priceService: PriceService) =>
   new DataLoader(
-    async (ids: string[]): Promise<{ id: string }[]> => {
-      return priceService.getPrices(ids);
-    }
+    async (ids: string[]): Promise<{ id: string }[]> =>
+      priceService.getPrices(ids)
   );

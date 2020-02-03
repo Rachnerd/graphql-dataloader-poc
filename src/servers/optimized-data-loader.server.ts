@@ -16,17 +16,20 @@ const typeDefs = gql`
   ${schemaString}
 `;
 
-const searchService = new SearchService();
-const itemService = new ItemService();
-const priceService = new PriceService();
-
 const naiveServer = new ApolloServer({
   typeDefs,
-  context: () => ({
-    searchDataLoader: searchDataLoaderFactory(searchService),
-    priceDataLoader: priceDataLoaderFactory(priceService),
-    itemDataLoader: itemDataLoaderFactory(itemService)
-  }),
+  context: () => {
+    const searchService = new SearchService();
+    const itemService = new ItemService();
+    const priceService = new PriceService();
+
+    return {
+      itemService,
+      searchDataLoader: searchDataLoaderFactory(searchService),
+      priceDataLoader: priceDataLoaderFactory(priceService),
+      itemDataLoader: itemDataLoaderFactory(itemService)
+    };
+  },
   resolvers: {
     Query: {
       searchItems: async (
@@ -62,7 +65,7 @@ const naiveServer = new ApolloServer({
           }))
         };
       },
-      allItems: async (_, __, { priceDataLoader }, info) => {
+      allItems: async (_, __, { priceDataLoader, itemService }, info) => {
         let items = await itemService.getAll();
 
         if (hasQueried("price", info)) {

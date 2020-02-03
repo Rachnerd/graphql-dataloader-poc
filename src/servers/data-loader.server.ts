@@ -1,13 +1,13 @@
 import { ApolloServer, gql } from "apollo-server";
 import * as path from "path";
 import * as fs from "fs";
-import { SearchService } from "../services/search.service";
-import { ItemService } from "../services/item.service";
 import { log } from "../utils";
-import { PriceService } from "../services/price.service";
 import { searchDataLoaderFactory } from "../data-loader/search.data-loader";
 import { priceDataLoaderFactory } from "../data-loader/price.data-loader";
 import { itemDataLoaderFactory } from "../data-loader/item.data-loader";
+import { SearchService } from "../services/search.service";
+import { ItemService } from "../services/item.service";
+import { PriceService } from "../services/price.service";
 
 const schemaFilePath = path.resolve(__dirname, "../", "schema.graphql");
 const schemaString = fs.readFileSync(schemaFilePath, "utf8");
@@ -16,29 +16,31 @@ const typeDefs = gql`
   ${schemaString}
 `;
 
-const searchService = new SearchService();
-const itemService = new ItemService();
-const priceService = new PriceService();
-
 const dataloaderServer = new ApolloServer({
   typeDefs,
-  context: () => ({
-    searchDataLoader: searchDataLoaderFactory(searchService),
-    priceDataLoader: priceDataLoaderFactory(priceService),
-    itemDataLoader: itemDataLoaderFactory(itemService)
-  }),
+  context: () => {
+    const searchService = new SearchService();
+    const itemService = new ItemService();
+    const priceService = new PriceService();
+    return {
+      itemService,
+      searchDataLoader: searchDataLoaderFactory(searchService),
+      priceDataLoader: priceDataLoaderFactory(priceService),
+      itemDataLoader: itemDataLoaderFactory(itemService)
+    };
+  },
   resolvers: {
     Query: {
       searchItems: (_, { page, pageSize }, { searchDataLoader }) => {
         log(`Query.searchItems pageSize: ${pageSize}`);
         return searchDataLoader.load({ page, pageSize });
       },
-      allItems: async (_, __, { priceDataLoader }, info) => {
+      allItems: async (_, __, { itemService }) => {
         return itemService.getAll();
       }
     },
     SearchResults: {
-      results: ({ ids }) => {
+      results: ({ ids }, _, { itemService }) => {
         log("SearchResults.result");
         return itemService.getByIds(ids);
       }

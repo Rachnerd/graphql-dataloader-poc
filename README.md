@@ -6,14 +6,15 @@ and clients with/without [batching](https://www.npmjs.com/package/apollo-link-ba
 Each server example can be called via the playground (http://localhost:4000) or a client.
 
 - [Server performance](#markdown-header-server-side-performance)
-    - [Naive server](#markdown-header-naive-server-implementation)
-    - [Data-loader server](#markdown-header-data-loader-server-implementation)
-    - [Optimized data-loader server](#markdown-header-optimized-data-loader-server-anti-pattern)
+
+  - [Naive server](#markdown-header-naive-server-implementation)
+  - [Data-loader server](#markdown-header-data-loader-server-implementation)
+  - [Optimized data-loader server](#markdown-header-optimized-data-loader-server-anti-pattern)
 
 - [Client performance](#markdown-header-client-side-performance)
-    - [Http client](#markdown-header-http-client)
-    - [Batch client](#markdown-header-batch-client)
-    - [Http/Batch split client](#markdown-header-httpbatch-split-client)
+  - [Http client](#markdown-header-http-client)
+  - [Batch client](#markdown-header-batch-client)
+  - [Http/Batch split client](#markdown-header-httpbatch-split-client)
 
 ## Server-side performance
 
@@ -215,6 +216,183 @@ Conclusion:
 - Server hits the PriceService for each item.
 
 _From this point onwards we're going to ignore the slow 5000ms call because parallel execution in combination with batching is already demonstrated._
+
+### Data-loader.
+
+Data-loader is a tool by GraphQL that groups single calls to a service/system into one batch request. A data-loader collects
+all arguments it receives within 1 tick of the event loop, then calls the provided batch function and redistributes batch
+results back to the callers.
+
+Looking at our schema we can identify 2 different cases for data-loader:
+
+- A price is fetched for each Item, which means that 10 items will trigger 10 calls to the price service.
+- A search can potentially duplicate calls to the search service if multiple queries with the same arguments are present
+  in the request.
+
+**_Each data-loader instance caches its returned values, so it is important to reinstantiate data-loaders on each request._**
+
+Each incoming request creates a new GraphQL context, so this is a good place to instantiate data-loaders:
+
+```typescript
+const server = new ApolloServer({
+  typeDefs,
+  context: () => {
+    const searchService = new SearchService();
+    const itemService = new ItemService();
+    const priceService = new PriceService();
+    return {
+      itemService,
+      searchDataLoader: searchDataLoaderFactory(searchService),
+      priceDataLoader: priceDataLoaderFactory(priceService),
+      itemDataLoader: itemDataLoaderFactory(itemService)
+    };
+  },
+  resolvers: { ... }
+}
+```
+
+#### Simple data-loader
+
+The easiest use-case for data-loader is batching single `getById` calls into one `getByIds` call.
+
+```typescript
+export const priceDataLoaderFactory = (priceService: PriceService) =>
+  new DataLoader(
+    async (ids: string[]): Promise<{ id: string }[]> =>
+      priceService.getPrices(ids)
+  );
+```
+
+_The factory wrapper around the data-loader makes it easier to reinstantiate the data-loader and isolate/provide the
+dependencies used by the batch function. This is a personal preference._
+
+Resolvers call the `load` function of the data-loader to get a price asynchronously:
+
+```typescript
+{
+    ...
+    Item: {
+      price: ({ id }, _, { priceDataLoader }) => {
+        log("Item.price");
+        return priceDataLoader.load(id);
+      }
+    }
+}
+```
+
+The price resolver gets called by each resolved item.
+
+So if 3 items are resolved:
+
+- The price resolver gets called 3 times with item 1, 2 and 3.
+- Each price resolver calls the price data-loader with the item id.
+- Next tick of the event loop.
+- The data-loader batch function gets called with: `['1', '2', '3']` and calls `priceService.getPrices(ids)`.
+- The prices are returned in the same order as the input arguments: `[price1, price2, price3]`.
+
+**_Your service or data-loader implementation is responsible for matching the results order with the input order._**
+
+#### Complex data-loader
+
+In more complex cases arguments determine if calls can be batched together or not. This results in multiple batches of
+calls with identical arguments within one data-loader.
+
+Steps to achieve multiple conditional batches within one data-loader:
+
+- Group calls by unique sets of arguments.
+- Perform the batch for each group (in parallel).
+- Flatten and sort the results to match the input order.
+
+```typescript
+/**
+ * Create a key representing unique combinations of search arguments.
+ */
+const toUniqueArgumentsKey = ({
+  searchTerm,
+  page,
+  pageSize
+}: SearchArguments) =>
+  `searchTerm:${searchTerm},page:${page},pageSize:${pageSize}`;
+
+/**
+ * Data-loader that batches calls based on their arguments.
+ */
+export const searchDataLoaderFactory = (searchService: SearchService) =>
+  new DataLoader(async (allSearchArguments: SearchArguments[]) => {
+    /**
+     * Reduce all search options to a map of unique options + corresponding call supplier.
+     */
+    const callMap = allSearchArguments.reduce(
+      (acc, searchArguments) => ({
+        ...acc,
+        [toUniqueArgumentsKey(searchArguments)]: () =>
+          searchService.search(
+            searchArguments.searchTerm,
+            searchArguments.page,
+            searchArguments.pageSize
+          )
+      }),
+      {}
+    );
+
+    /**
+     * Execute calls and reduce them to a map of key and result
+     */
+    const resultsMap = (
+      await Promise.all(
+        Object.keys(callMap).map(key =>
+          callMap[key]().then(result => ({ result, key }))
+        )
+      )
+    ).reduce(
+      (acc, { result, key }) => ({
+        ...acc,
+        [key]: result
+      }),
+      {}
+    );
+
+    /**
+     * Map all search options to corresponding results
+     */
+    return allSearchArguments.map(
+      searchOptions => resultsMap[toUniqueArgumentsKey(searchOptions)]
+    );
+  });
+```
+
+Here's a step by step visualisation of the data transformations happening inside the search data-loader:
+
+```
+
+# arguments
+[
+    { searchTerm: 'Hello', page: 0, pageSize: 10 },
+    { searchTerm: 'World', page: 0, pageSize: 10 },
+    { searchTerm: 'Hello', page: 0, pageSize: 10 },
+    { searchTerm: 'World', page: 0, pageSize: 10 }
+]
+
+# callMap
+{
+    'searchTerm:Hello,page:0,pageSize:10': () => searchService.search("Hello", 0, 10),
+    'searchTerm:World,page:0,pageSize:10': () => searchService.search("World", 0, 10)
+}
+
+# resultsMap
+{
+    'searchTerm:Hello,page:0,pageSize:10': { searchTerm: 'Hello', pagination: { ... }, results: [ ... ] },
+    'searchTerm:World,page:0,pageSize:10': { searchTerm: 'World', pagination: { ... }, results: [ ... ] },
+}
+
+# output
+[
+    { searchTerm: 'Hello', pagination: { ... }, results: [ ... ] },
+    { searchTerm: 'World', pagination: { ... }, results: [ ... ] },
+    { searchTerm: 'Hello', pagination: { ... }, results: [ ... ] },
+    { searchTerm: 'World', pagination: { ... }, results: [ ... ] }
+]
+```
 
 ### Data-loader server implementation.
 

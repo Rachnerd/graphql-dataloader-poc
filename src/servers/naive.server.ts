@@ -21,9 +21,9 @@ const naiveServer = new ApolloServer({
   typeDefs,
   resolvers: {
     Query: {
-      searchItems: (_, { page, pageSize }) => {
+      searchItems: (_, { searchTerm, page, pageSize }) => {
         log(`Query.searchItems pageSize: ${pageSize}`);
-        return searchService.search(page, pageSize);
+        return searchService.search(searchTerm, page, pageSize);
       },
       allItems: () => {
         log("Query.allItems");
