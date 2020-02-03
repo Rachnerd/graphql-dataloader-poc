@@ -4,8 +4,10 @@ This repo contains demonstrations of servers with and without [data-loader](http
 and clients with and without [batching](https://www.npmjs.com/package/apollo-link-batch-http).
 
 Each server example can be called via the playground (http://localhost:4000) or a client.
+- Server
+    - [Naive server](#markdown-header-naive-server-implementation)
 
-### Server-side performance
+## Server-side performance
 
 Concerns:
 
