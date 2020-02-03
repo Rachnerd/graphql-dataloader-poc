@@ -448,6 +448,48 @@ Conclusion:
 
 ### Http/batch split client
 
+The most efficient strategy for clients is to combine the http and batch link and manually blacklist queries from batching.
+This can be done by using ApolloLink's `split` function:
+
+_Here follows a way (not necessarily the best) to blacklist queries._
+
+We let the `split` function check the `context` of each query to see if it should be excluded from the batch:
+
+```typescript
+const batch = new BatchHttpLink({ uri: "http://localhost:4000" });
+const http = new HttpLink({ uri: "http://localhost:4000" });
+
+const client = new ApolloClient({
+  link: ApolloLink.split(
+    ({ getContext }) => getContext().batch !== false,
+    batch,
+    http
+  ),
+  cache: new InMemoryCache()
+});
+```
+
+Now the slow call of 5000ms can easily be excluded from the batch:
+
+```typescript
+client.query({
+  query: gql`
+    query AllItems {
+      allItems {
+        id
+        name
+        price {
+          amount
+        }
+      }
+    }
+  `,
+  context: {
+    batch: false
+  }
+});
+```
+
 ```
 npm run split-http-batch-client
 ```
