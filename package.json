@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "client-http": "ts-node client.ts",
-    "client-batch": "BATCH=true ts-node client.ts",
+    "http-client": "ts-node src/clients/http.client.ts",
+    "batch-client": "ts-node src/clients/batch.client.ts",
+    "split-http-batch-client": "ts-node src/clients/split-http-batch.client.ts",
     "naive-server": "ts-node src/servers/naive.server.ts",
     "data-loader-server": "ts-node src/servers/data-loader.server.ts",
     "optimized-data-loader-server": "ts-node src/servers/optimized-data-loader.server.ts"

@@ -3,7 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { SearchService } from "../services/search.service";
 import { ItemService } from "../services/item.service";
-import { log } from "../utils";
+import { hasQueried, log, normalize } from "../utils";
 import { PriceService } from "../services/price.service";
 import { searchDataLoaderFactory } from "../data-loader/search.data-loader";
 import { priceDataLoaderFactory } from "../data-loader/price.data-loader";
@@ -32,6 +32,9 @@ const dataloaderServer = new ApolloServer({
       searchItems: (_, { page, pageSize }, { searchDataLoader }) => {
         log(`Query.searchItems pageSize: ${pageSize}`);
         return searchDataLoader.load({ page, pageSize });
+      },
+      allItems: async (_, __, { priceDataLoader }, info) => {
+        return itemService.getAll();
       }
     },
     SearchResults: {

@@ -61,6 +61,23 @@ const naiveServer = new ApolloServer({
             price: normalizedPrices[id]
           }))
         };
+      },
+      allItems: async (_, __, { priceDataLoader }, info) => {
+        let items = await itemService.getAll();
+
+        if (hasQueried("price", info)) {
+          const prices = await Promise.all<Record<"id", string>>(
+            items.map(({ id }) => priceDataLoader.load(id))
+          );
+
+          const normalizedPrices = normalize(prices);
+          items = items.map(item => ({
+            ...item,
+            price: normalizedPrices[item.id]
+          }));
+        }
+
+        return items;
       }
     }
   }

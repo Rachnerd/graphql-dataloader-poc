@@ -5,12 +5,14 @@ and clients with and without [batching](https://www.npmjs.com/package/apollo-lin
 
 Each server example can be called via the playground (http://localhost:4000) or a client.
 
-```
-npm run client-http
-npm run client-batch
-```
+### Server-side performance
 
-## Naive server implementation.
+Concerns:
+
+- A server can be called with a single query or N queries batched into one request.
+- Queries can consist of the same resource split into multiple queries (which is considered a good practice in Frontend).
+
+### Naive server implementation.
 
 [naive.server.ts](./src/servers/naive.server.ts)
 
@@ -20,7 +22,7 @@ npm run naive-server
 
 The naive server implements resolvers without using data-loader.
 
-```
+```typescript
 {
     Query: {
       searchItems: (_, { page, pageSize }) => {
@@ -50,7 +52,7 @@ The naive server implements resolvers without using data-loader.
 
 This works find for a simple query that hits all available resources:
 
-```
+```graphql
 {
   searchItems(searchTerm: "" page: 0 pageSize: 5){
     results {
@@ -93,7 +95,7 @@ Resource sequence:
 Search (1 time)
   |---> Items (1 time)
            |---> Price (n times)
-           ... 
+           ...
 Item (1 time)
 ```
 
@@ -101,8 +103,8 @@ A good practice in Apollo is to move the queries to component level, so let's sp
 
 SearchResultsComponent
 
-```
-{
+```graphql
+query SearchResults {
   searchItems(searchTerm: "" page: 0 pageSize: 5){
     results {
       id
@@ -116,8 +118,8 @@ SearchResultsComponent
 
 PaginationComponent
 
-```
-{
+```graphql
+query SearchPagination {
   searchItems(searchTerm: "" page: 0 pageSize: 5){
     pagination{
       page
@@ -128,8 +130,8 @@ PaginationComponent
 
 ItemsComponent
 
-```
-{
+```graphql
+query AllItems {
   allItems {
     id
   }
@@ -168,7 +170,7 @@ Resource sequence:
 Search (2 times)
   |---> Items (1 time)
            |---> Price (n times)
-           ... 
+           ...
 Item (1 time)
 ```
 
@@ -187,7 +189,7 @@ Conclusion:
 - Server hits the SearchService twice because of the query split.
 - Server hits the PriceService for each item.
 
-When we switch from http link to batch http link in the client, the client output changes to:
+When batching is enabled the client output changes to:
 
 ```
 14:12:12.544: Send queries
@@ -199,9 +201,8 @@ When we switch from http link to batch http link in the client, the client outpu
 Conclusion:
 
 - Client receives data as soon as all is resolved.
-- Server hits the SearchService twice because of the query split. (server output hasn't changed)
-- Server hits the PriceService for each item. (server output hasn't changed)
-
+- Server hits the SearchService twice because of the query split.
+- Server hits the PriceService for each item.
 
 _From this point onwards we're going to ignore the slow 5000ms call because parallel execution in combination with batching is already demonstrated._
 
@@ -213,12 +214,12 @@ _From this point onwards we're going to ignore the slow 5000ms call because para
 npm run data-loader-server
 ```
 
-This server implements data-loader so that services aren't hit more often than needed (only if the client batches queries).
+This server implements data-loader so that services aren't hit more often than needed (only if the client batches or a single request contains multiple queries).
 
 SearchResultsComponent
 
-```
-{
+```graphql
+query SearchResults {
   searchItems(searchTerm: "" page: 0 pageSize: 5){
     results {
       id
@@ -232,8 +233,8 @@ SearchResultsComponent
 
 PaginationComponent
 
-```
-{
+```graphql
+query SearchPagination {
   searchItems(searchTerm: "" page: 0 pageSize: 5){
     pagination{
       page
@@ -280,10 +281,10 @@ npm run optimized-data-loader-server
 ```
 
 KrampHub is currently seeing the resource sequence as an issue because Item and Price should be fetched in parallel.
-Each normal GQL server implementation will wait for Item to be resolved before fetching the Price. KrampHub doesn't 
-want to change the schema to fit the MicroServices, so **a** way of "solving" this issue without changing the schema, is looking ahead on Query resolver level.
+Each normal GQL server implementation will wait for Item to be resolved before fetching the Price. KrampHub doesn't
+want to change the schema to fit the MicroService contracts, so **a** way of "solving" this issue without changing the schema, is looking ahead on Query resolver level.
 
-```
+```typescript
 {
     Query: {
       searchItems: async (
@@ -325,6 +326,7 @@ want to change the schema to fit the MicroServices, so **a** way of "solving" th
 ```
 
 Server output:
+
 ```
 13:27:54.907: Query.searchItems pageSize: 5
 13:27:55.109: SearchService search responded within 200ms
@@ -339,3 +341,104 @@ Search (1 time)
   |---> Items (1 time)
   |---> Price (1 time)
 ```
+
+## Client-side performance
+
+For this section the clients will communicate with the "optimized" server to reduce the response times as much as possible.
+
+The following clients will query: 
+
+```graphql
+query SearchResults {
+  searchItems(searchTerm: "", page: 0, pageSize: 5) { # 200ms
+    results { # 500ms
+      id
+      price { # 200ms
+        amount
+      }
+    }
+  }
+}
+```
+
+```graphql
+query SearchPagination {
+  searchItems(searchTerm: "", page: 0, pageSize: 5) { # 200ms
+    pagination {
+      page
+    }
+  }
+}
+```
+
+```graphql
+query AllItems {
+  allItems { # 5000ms
+    id
+    name
+    price {  # 200ms
+      amount
+    }
+  }
+}
+```
+
+### Http client
+
+The regular http-link will send a request for each detected query regardless of overlap.
+
+```
+npm run http-client
+```
+
+```
+08:34:07.549: Send queries
+08:34:07.779: Received pagination
+08:34:08.261: Received results
+08:34:12.825: Received all items
+```
+
+Conclusion:
+
+- Call for each query.
+- Overlap in queries can't be optimized by the server due to the fact that data-loader works on request basis.
+
+### Batch client
+
+The batch-http-link will send one request for all detected queries.
+
+```
+npm run batch-client
+```
+
+```
+08:34:15.404: Send queries
+08:34:20.663: Received results
+08:34:20.663: Received pagination
+08:34:20.663: Received all items
+```
+
+Conclusion:
+
+- One call for all queries.
+- Response always takes as long as the slowest query.
+- Server can optimize the queries because they're sent within the same request.
+
+### Split http batch client
+
+```
+npm run split-http-batch-client
+```
+
+```
+08:34:24.383: Send queries
+08:34:25.097: Received results
+08:34:25.097: Received pagination
+08:34:29.617: Received all items
+```
+
+Conclusion:
+
+- One call for (most) queries.
+- Client decides which queries should be excluded from the batch to improve performance.
+- Server can optimize backend system calls because queries are sent within the same request.
