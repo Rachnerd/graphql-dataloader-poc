@@ -21,7 +21,7 @@ Each server example can be called via the playground (http://localhost:4000) or 
 ## Data-loader (server)
 
 Data-loader is a tool by GraphQL that groups single calls to a service/system into one batch request. A data-loader collects
-all arguments it receives within 1 tick of the event loop, passes them to a batch function and then returns the results
+all arguments it receives within 1 tick of the event loop (NodeJS), passes them to a batch function and then returns the results
 back to each caller (in the same order as the input arguments).
 
 Looking at our schema we can identify 2 use-cases for data-loader:
@@ -89,7 +89,7 @@ So if 3 items are resolved:
 
 - The price resolver gets called 3 times with item 1, 2 and 3.
 - Each price resolver calls the price data-loader with the item id.
-- Next tick of the event loop.
+- Event loop is incremented by 1 tick (NodeJS).
 - The data-loader batch function gets called with: `['1', '2', '3']` and calls `priceService.getPrices(ids)` asynchronously.
 - The prices are returned in the same order as the input arguments: `[price1, price2, price3]`.
 
