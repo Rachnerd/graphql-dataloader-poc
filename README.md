@@ -1,26 +1,27 @@
 # Batching DEMO
 
-This repo contains demonstrations of servers with and without [data-loader](https://www.npmjs.com/package/dataloader)
-and clients with and without [batching](https://www.npmjs.com/package/apollo-link-batch-http).
+This repo contains demonstrations of servers with/without [data-loader](https://www.npmjs.com/package/dataloader)
+and clients with/without [batching](https://www.npmjs.com/package/apollo-link-batch-http).
 
 Each server example can be called via the playground (http://localhost:4000) or a client.
 
 - [Server performance](#markdown-header-server-side-performance)
-    - [Naive server](#markdown-header-naive-server-implementation)
-    - [Data-loader server](#markdown-header-data-loader-server-implementation)
-    - [Optimized-data-loader server](#markdown-header-optimized-data-loader-server-anti-pattern)
+
+  - [Naive server](#markdown-header-naive-server-implementation)
+  - [Data-loader server](#markdown-header-data-loader-server-implementation)
+  - [Optimized-data-loader server](#markdown-header-optimized-data-loader-server-anti-pattern)
 
 - [Client performance](#markdown-header-client-side-performance)
-    - [Http client](#markdown-header-http-client)
-    - [Batch client](#markdown-header-batch-client)
-    - [Http/Batch split client](#markdown-header-http-batch-client)
+  - [Http client](#markdown-header-http-client)
+  - [Batch client](#markdown-header-batch-client)
+  - [Http/Batch split client](#markdown-header-httpbatch-client)
 
 ## Server-side performance
 
-Concerns:
+Server concerns:
 
-- A server can be called with a single query or N queries batched into one request.
-- Queries can consist of the same resource split into multiple queries (which is considered a good practice in Frontend).
+- A client can send multiple queries in one request.
+- Queries (within the same request) can contain parts of a resource split over multiple queries which leads to unnecessary grpc calls.
 
 ### Naive server implementation.
 
@@ -64,14 +65,14 @@ This works find for a simple query that hits all available resources:
 
 ```graphql
 {
-  searchItems(searchTerm: "" page: 0 pageSize: 5){
+  searchItems(searchTerm: "", page: 0, pageSize: 5) {
     results {
       id
       price {
         amount
       }
     }
-    pagination{
+    pagination {
       page
     }
   }
@@ -115,7 +116,7 @@ SearchResultsComponent
 
 ```graphql
 query SearchResults {
-  searchItems(searchTerm: "" page: 0 pageSize: 5){
+  searchItems(searchTerm: "", page: 0, pageSize: 5) {
     results {
       id
       price {
@@ -130,8 +131,8 @@ PaginationComponent
 
 ```graphql
 query SearchPagination {
-  searchItems(searchTerm: "" page: 0 pageSize: 5){
-    pagination{
+  searchItems(searchTerm: "", page: 0, pageSize: 5) {
+    pagination {
       page
     }
   }
@@ -230,7 +231,7 @@ SearchResultsComponent
 
 ```graphql
 query SearchResults {
-  searchItems(searchTerm: "" page: 0 pageSize: 5){
+  searchItems(searchTerm: "", page: 0, pageSize: 5) {
     results {
       id
       price {
@@ -245,8 +246,8 @@ PaginationComponent
 
 ```graphql
 query SearchPagination {
-  searchItems(searchTerm: "" page: 0 pageSize: 5){
-    pagination{
+  searchItems(searchTerm: "", page: 0, pageSize: 5) {
+    pagination {
       page
     }
   }
@@ -354,16 +355,24 @@ Search (1 time)
 
 ## Client-side performance
 
+Client concerns:
+
+- Splitting resources in queries can only be optimized by the server if batched together.
+- A client can potentially batch very heavy queries with light queries what result in load times longer than necessary.
+
 For this section the clients will communicate with the "optimized" server to reduce the response times as much as possible.
 
-The following clients will query: 
+The following clients will query:
 
 ```graphql
 query SearchResults {
-  searchItems(searchTerm: "", page: 0, pageSize: 5) { # 200ms
-    results { # 500ms
+  searchItems(searchTerm: "", page: 0, pageSize: 5) {
+    # 200ms
+    results {
+      # 500ms
       id
-      price { # 200ms
+      price {
+        # 200ms
         amount
       }
     }
@@ -373,7 +382,8 @@ query SearchResults {
 
 ```graphql
 query SearchPagination {
-  searchItems(searchTerm: "", page: 0, pageSize: 5) { # 200ms
+  searchItems(searchTerm: "", page: 0, pageSize: 5) {
+    # 200ms
     pagination {
       page
     }
@@ -383,10 +393,12 @@ query SearchPagination {
 
 ```graphql
 query AllItems {
-  allItems { # 5000ms
+  allItems {
+    # 5000ms
     id
     name
-    price {  # 200ms
+    price {
+      # 200ms
       amount
     }
   }
