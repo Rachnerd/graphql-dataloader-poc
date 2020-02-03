@@ -4,8 +4,16 @@ This repo contains demonstrations of servers with and without [data-loader](http
 and clients with and without [batching](https://www.npmjs.com/package/apollo-link-batch-http).
 
 Each server example can be called via the playground (http://localhost:4000) or a client.
-- Server
+
+- [Server performance](#markdown-header-server-side-performance)
     - [Naive server](#markdown-header-naive-server-implementation)
+    - [Data-loader server](#markdown-header-data-loader-server-implementation)
+    - [Optimized-data-loader server](#markdown-header-optimized-data-loader-server-anti-pattern)
+
+- [Client performance](#markdown-header-client-side-performance)
+    - [Http client](#markdown-header-http-client)
+    - [Batch client](#markdown-header-batch-client)
+    - [Http/Batch split client](#markdown-header-http-batch-client)
 
 ## Server-side performance
 
@@ -208,7 +216,7 @@ Conclusion:
 
 _From this point onwards we're going to ignore the slow 5000ms call because parallel execution in combination with batching is already demonstrated._
 
-## Data-loader server implementation.
+### Data-loader server implementation.
 
 [data-loader.server.ts](./src/servers/data-loader.server.ts)
 
@@ -274,7 +282,7 @@ Conclusion:
 - The server reduces the service calls to a minimum.
 - The server still needs to wait for items to be resolved before prices are resolved.
 
-## Optimized data-loader server (anti-pattern)
+### Optimized data-loader server (anti-pattern)
 
 [optimized-data-loader.server.ts](./src/servers/optimized-data-loader.server.ts)
 
@@ -426,7 +434,7 @@ Conclusion:
 - Response always takes as long as the slowest query.
 - Server can optimize the queries because they're sent within the same request.
 
-### Split http batch client
+### Http/batch split client
 
 ```
 npm run split-http-batch-client
