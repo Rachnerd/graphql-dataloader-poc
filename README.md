@@ -14,7 +14,7 @@ Each server example can be called via the playground (http://localhost:4000) or 
 - [Client performance](#markdown-header-client-side-performance)
   - [Http client](#markdown-header-http-client)
   - [Batch client](#markdown-header-batch-client)
-  - [Http/Batch split client](#markdown-header-httpbatch-client)
+  - [Http/Batch split client](#markdown-header-httpbatch-split-client)
 
 ## Server-side performance
 
