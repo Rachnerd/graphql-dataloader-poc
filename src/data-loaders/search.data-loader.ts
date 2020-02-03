@@ -1,7 +1,7 @@
 import * as DataLoader from "dataloader";
 import { SearchService } from "../services/search.service";
 
-interface SearchArguments {
+interface SearchOptions {
   searchTerm: string;
   page: number;
   pageSize: number;
@@ -10,29 +10,25 @@ interface SearchArguments {
 /**
  * Create a key representing combinations of arguments.
  */
-const toUniqueArgumentsKey = ({
-  searchTerm,
-  page,
-  pageSize
-}: SearchArguments) =>
+const toUniqueArgumentsKey = ({ searchTerm, page, pageSize }: SearchOptions) =>
   `searchTerm:${searchTerm},page:${page},pageSize:${pageSize}`;
 
 /**
  * Data-loader that batches calls based on their arguments.
  */
 export const searchDataLoaderFactory = (searchService: SearchService) =>
-  new DataLoader(async (allSearchArguments: SearchArguments[]) => {
+  new DataLoader(async (allSearchOptions: SearchOptions[]) => {
     /**
      * Reduce all search options to a map of unique options + corresponding call supplier.
      */
-    const callMap = allSearchArguments.reduce(
-      (acc, searchArguments) => ({
+    const callsMap = allSearchOptions.reduce(
+      (acc, searchOptions) => ({
         ...acc,
-        [toUniqueArgumentsKey(searchArguments)]: () =>
+        [toUniqueArgumentsKey(searchOptions)]: () =>
           searchService.search(
-            searchArguments.searchTerm,
-            searchArguments.page,
-            searchArguments.pageSize
+            searchOptions.searchTerm,
+            searchOptions.page,
+            searchOptions.pageSize
           )
       }),
       {}
@@ -43,8 +39,8 @@ export const searchDataLoaderFactory = (searchService: SearchService) =>
      */
     const resultsMap = (
       await Promise.all(
-        Object.keys(callMap).map(key =>
-          callMap[key]().then(result => ({ result, key }))
+        Object.keys(callsMap).map(key =>
+          callsMap[key]().then(result => ({ result, key }))
         )
       )
     ).reduce(
@@ -58,7 +54,7 @@ export const searchDataLoaderFactory = (searchService: SearchService) =>
     /**
      * Map all search options to corresponding results
      */
-    return allSearchArguments.map(
+    return allSearchOptions.map(
       searchOptions => resultsMap[toUniqueArgumentsKey(searchOptions)]
     );
   });
