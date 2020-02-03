@@ -5,15 +5,15 @@ and clients with/without [batching](https://www.npmjs.com/package/apollo-link-ba
 
 Each server example can be called via the playground (http://localhost:4000) or a client.
 
-- [Server performance](#markdown-header-server-side-performance)
-  - [Naive server](#markdown-header-naive-server-implementation)
-  - [Data-loader server](#markdown-header-data-loader-server-implementation)
-  - [Optimized data-loader server](#markdown-header-optimized-data-loader-server-anti-pattern)
+* [Server performance](#markdown-header-server-side-performance)
+  * [Naive server](#markdown-header-naive-server-implementation)
+  * [Data-loader server](#markdown-header-data-loader-server-implementation)
+  * [Optimized data-loader server](#markdown-header-optimized-data-loader-server-anti-pattern)
 
-- [Client performance](#markdown-header-client-side-performance)
-  - [Http client](#markdown-header-http-client)
-  - [Batch client](#markdown-header-batch-client)
-  - [Http/Batch split client](#markdown-header-httpbatch-split-client)
+* [Client performance](#markdown-header-client-side-performance)
+  * [Http client](#markdown-header-http-client)
+  * [Batch client](#markdown-header-batch-client)
+  * [Http/Batch split client](#markdown-header-httpbatch-split-client)
 
 ## Server-side performance
 
