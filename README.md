@@ -743,6 +743,7 @@ interface of the HTML element.
 Custom [List](src/ui-components/list/List.tsx) example:
 
 ```typescript jsx
+
 export interface ListProps extends HTMLAttributes<HTMLUListElement> {
   highlightOnHover?: boolean;
 }
