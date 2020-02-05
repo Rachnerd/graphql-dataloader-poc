@@ -1,7 +1,8 @@
 # Batching DEMO
 
-This repo contains demonstrations of servers with/without [data-loader](https://www.npmjs.com/package/dataloader)
-and clients with/without [batching](https://www.npmjs.com/package/apollo-link-batch-http).
+This repo contains demonstrations of servers with/without [data-loader](https://www.npmjs.com/package/dataloader), 
+clients with/without [batching](https://www.npmjs.com/package/apollo-link-batch-http) and a Next app with a few components
+that demonstrate separation of concerns in combination with GraphQL + TypeScript.
 
 All servers and clients use the same [schema.graphql](servers/schema.graphql)
 
