@@ -1,15 +1,15 @@
 import { ApolloServer, gql } from "apollo-server";
 import * as path from "path";
 import * as fs from "fs";
-import { log } from "../utils";
-import { searchDataLoaderFactory } from "../data-loaders/search.data-loader";
-import { priceDataLoaderFactory } from "../data-loaders/price.data-loader";
-import { itemDataLoaderFactory } from "../data-loaders/item.data-loader";
-import { SearchService } from "../services/search.service";
-import { ItemService } from "../services/item.service";
-import { PriceService } from "../services/price.service";
+import { log } from "./utils";
+import { searchDataLoaderFactory } from "./data-loaders/search.data-loader";
+import { priceDataLoaderFactory } from "./data-loaders/price.data-loader";
+import { itemDataLoaderFactory } from "./data-loaders/item.data-loader";
+import { SearchService } from "./services/search.service";
+import { ItemService } from "./services/item.service";
+import { PriceService } from "./services/price.service";
 
-const schemaFilePath = path.resolve(__dirname, "../", "schema.graphql");
+const schemaFilePath = path.resolve(__dirname, "./", "schema.graphql");
 const schemaString = fs.readFileSync(schemaFilePath, "utf8");
 
 const typeDefs = gql`

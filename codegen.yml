@@ -1,0 +1,19 @@
+schema:
+  - ./servers/schema.graphql
+overwrite: true
+documents: "./src/**/*.graphql"
+generates:
+  ./.generated/gql.model.tsx:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
+    config:
+      withHooks: true
+      withHOC: false
+      hooksImportFrom: "@apollo/react-hooks"
+      avoidOptionals: true
+      typesPrefix: GQL
+#      Only useful if the schema is outside of this repo.
+#  ./libs/data/src/.generated/schema.graphql:
+#    - schema-ast

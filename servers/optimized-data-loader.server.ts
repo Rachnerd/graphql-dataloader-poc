@@ -1,15 +1,15 @@
 import { ApolloServer, gql } from "apollo-server";
 import * as path from "path";
 import * as fs from "fs";
-import { SearchService } from "../services/search.service";
-import { ItemService } from "../services/item.service";
-import { hasQueried, log, normalize } from "../utils";
-import { PriceService } from "../services/price.service";
-import { searchDataLoaderFactory } from "../data-loaders/search.data-loader";
-import { priceDataLoaderFactory } from "../data-loaders/price.data-loader";
-import { itemDataLoaderFactory } from "../data-loaders/item.data-loader";
+import { SearchService } from "./services/search.service";
+import { ItemService } from "./services/item.service";
+import { hasQueried, log, normalize } from "./utils";
+import { PriceService } from "./services/price.service";
+import { searchDataLoaderFactory } from "./data-loaders/search.data-loader";
+import { priceDataLoaderFactory } from "./data-loaders/price.data-loader";
+import { itemDataLoaderFactory } from "./data-loaders/item.data-loader";
 
-const schemaFilePath = path.resolve(__dirname, "../", "schema.graphql");
+const schemaFilePath = path.resolve(__dirname, "./", "schema.graphql");
 const schemaString = fs.readFileSync(schemaFilePath, "utf8");
 
 const typeDefs = gql`
@@ -70,7 +70,9 @@ const naiveServer = new ApolloServer({
 
         if (hasQueried("price", info)) {
           const prices = await Promise.all<Record<"id", string>>(
-            items.map(({ id }) => priceDataLoader.load(id))
+            items.map(({ id }) =>
+              priceDataLoader.load(id).then(price => ({ ...price, id }))
+            )
           );
 
           const normalizedPrices = normalize(prices);

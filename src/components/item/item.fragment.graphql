@@ -1,0 +1,7 @@
+fragment ItemFull on Item {
+  id
+  name
+  price {
+    ...ItemPrice
+  }
+}

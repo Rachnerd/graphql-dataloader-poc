@@ -11,7 +11,7 @@ for (let i = 0; i < 200; i++) {
 
 export class ItemService {
   async getAll() {
-    const delay = 5000;
+    const delay = 0;
     return delayedValue(items, delay).then(
       tap(() => log(`ItemService getAll responded within ${delay}ms`))
     );

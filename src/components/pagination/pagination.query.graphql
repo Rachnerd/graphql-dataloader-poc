@@ -1,0 +1,10 @@
+query SearchResults($searchTerm: String!, $page: Int!, $pageSize: Int!) {
+  searchItems(searchTerm: $searchTerm, page: $page, pageSize: $pageSize) {
+    results {
+      id
+      price {
+        amount
+      }
+    }
+  }
+}

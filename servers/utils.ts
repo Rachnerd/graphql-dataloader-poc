@@ -14,6 +14,10 @@ export const tap = (cb: () => void) => value => {
   return value;
 };
 
+/**
+ * NOTE: This implementation does not support Fragments and is just an example of how resolvers could identify which fields
+ * are queried!
+ */
 export const hasQueried = (pathString: string, info: GraphQLResolveInfo) => {
   const path = pathString.split(".");
   let validatedPath = info.fieldNodes[0].selectionSet.selections;

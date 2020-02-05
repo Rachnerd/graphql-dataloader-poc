@@ -1,5 +1,5 @@
 import { ApolloClient, gql } from "apollo-boost";
-import { log } from "../../utils";
+import { log } from "../../../servers/utils";
 
 export const queryServer = (
   client: ApolloClient<any>,

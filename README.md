@@ -3,7 +3,7 @@
 This repo contains demonstrations of servers with/without [data-loader](https://www.npmjs.com/package/dataloader)
 and clients with/without [batching](https://www.npmjs.com/package/apollo-link-batch-http).
 
-All servers and clients use the same [schema.graphql](src/schema.graphql)
+All servers and clients use the same [schema.graphql](servers/schema.graphql)
 
 Each server example can be called via the playground (http://localhost:4000) or a client.
 
@@ -17,7 +17,11 @@ Each server example can be called via the playground (http://localhost:4000) or 
     - [Http client](#markdown-header-http-client)
     - [Batch client](#markdown-header-batch-client)
     - [Http/Batch split client](#markdown-header-httpbatch-split-client)
-
+- [Client components](#markdown-header-httpbatch-split-client)
+    - [UI components](#markdown-header-ui-components)
+    - [Dumb/presenter components](#markdown-header-dumbpresenter-components)
+    - [Smart/container components](#markdown-header-smartcontainer-components)
+    
 ## Data-loader (server)
 
 Data-loader is a tool by GraphQL that groups single calls to a service/system into one batch request. A data-loader collects
@@ -49,14 +53,14 @@ const server = new ApolloServer({
 Looking at our schema we can identify 2 use-cases for data-loader:
 
 - Simple: A price is fetched for each Item, which means that 10 items will trigger 10 calls to the price service.
-- Complex: The `searchItems` query can be split by the frontend into separate queries (which is considered a good practice). 
-This means that conditional batching based on sets of arguments is required to minimize the amount of calls.
+- Complex: The `searchItems` query can be split by the frontend into separate queries (which is considered a good practice).
+  This means that conditional batching based on sets of arguments is required to minimize the amount of calls.
 
 #### Simple data-loader
 
 The easiest use-case for data-loader is batching single `getById` calls into one `getByIds` call.
 
-[price.data-loader.ts](src/data-loaders/price.data-loader.ts)
+[price.data-loader.ts](servers/data-loaders/price.data-loader.ts)
 
 ```typescript
 export const priceDataLoaderFactory = (priceService: PriceService) =>
@@ -106,7 +110,7 @@ Steps to achieve multiple conditional batches within one data-loader:
 - Perform the batch for each group (in parallel).
 - Flatten and sort the results to match the input order.
 
-[search.data-loader.ts](src/data-loaders/search.data-loader.ts)
+[search.data-loader.ts](servers/data-loaders/search.data-loader.ts)
 
 ```typescript
 /**
@@ -204,7 +208,7 @@ Server concerns:
 
 ### Naive server implementation.
 
-[naive.server.ts](./src/servers/naive.server.ts)
+[naive.server.ts](servers/naive.server.ts)
 
 ```
 npm run naive-server
@@ -398,7 +402,7 @@ _From this point onwards we're going to ignore the slow 5000ms call because para
 
 ### Data-loader server implementation.
 
-[data-loader.server.ts](./src/servers/data-loader.server.ts)
+[data-loader.server.ts](servers/data-loader.server.ts)
 
 ```
 npm run data-loader-server
@@ -464,7 +468,7 @@ Conclusion:
 
 ### Optimized data-loader server (anti-pattern)
 
-[optimized-data-loader.server.ts](./src/servers/optimized-data-loader.server.ts)
+[optimized-data-loader.server.ts](servers/optimized-data-loader.server.ts)
 
 ```
 npm run optimized-data-loader-server
@@ -693,3 +697,288 @@ Conclusion:
 - One call for (most) queries.
 - Client decides which queries should be excluded from the batch to improve performance.
 - Server can optimize backend system calls because queries are sent within the same request.
+
+## Client components
+
+The following examples only work with the `data-loader-server` because the `opimized-loader-server` hacky implementation
+does not support Fragments (it could if more effort is put into it).
+
+Generate code based on `.graphql` files.
+
+```
+npm run gen
+```
+
+Run the server:
+```
+npm run data-loader-server
+```
+
+Run the app:
+
+```
+npm start
+```
+
+
+### UI components
+
+Properties:
+
+- Data input (props)
+- Event output
+- No business logic
+- Focuses on 1 concern only
+- Reusable by other projects
+
+Basically these components are similar to the components provided by Bootstrap, Material etc.
+
+Currently Sabre is an example of a custom lib of UI components.
+
+If the goal is to replace an existing HTML element with a UI component, it's possible to extend the
+interface of the HTML element.
+
+#### List example
+
+Custom [List](src/ui-components/list/List.tsx) example:
+
+```typescript jsx
+export interface ListProps extends HTMLAttributes<HTMLUListElement> {
+  highlightOnHover?: boolean;
+}
+
+export const List: React.FC<ListProps> = ({
+  children,
+  highlightOnHover = false,
+  className,
+  ...htmlProps
+}) => (
+  <ul
+    {...htmlProps}
+    className={classnames(
+      "poc-list",
+      {
+        "poc-list--highlight": highlightOnHover
+      },
+      className
+    )}
+  >
+    {children}
+  </ul>
+);
+```
+
+Simple list (styled according to house style)
+
+```typescript jsx
+<List>
+  <ListItem>Item 1</ListItem>
+  <ListItem>Item 2</ListItem>
+  <ListItem>Item 3</ListItem>
+</List>
+```
+
+List with custom functionality
+
+```typescript jsx
+<List highlightOnHover={true}>
+  <ListItem>Yo</ListItem>
+  <ListItem>Yo</ListItem>
+</List>
+```
+
+List with \<ul> functionality
+
+```typescript jsx
+<List onClick={() => {}} onMouseOver={() => {}}>
+  <ListItem>Yo</ListItem>
+  <ListItem>Yo</ListItem>
+</List>
+```
+
+### Dumb/presenter components
+
+Properties:
+
+- Data input (props)
+- Handles events of UI components
+- Event output (usually more explicit than `click`, `hover` etc)
+- Composition of UI components
+- Visualizes a functional (specific) part of the application
+
+Since this is the first presenter layer that is coupled to requirements, it is a good idea to couple its Props interface
+with GraphQL.
+
+#### Item example
+
+The Item is defined in the GraphQL schema as follows:
+
+```graphql
+type Item {
+  id: ID!
+  name: String!
+  price: Price!
+}
+
+type Price {
+  currency: String!
+  amount: Float!
+}
+```
+
+This schema can be visualized by making 2 dumb components.
+Because the smart/container component is in charge of fetching the data, the dumb components need to be coupled to
+the query definition. This way components can detect at compile-time if their required fields are queried.
+
+The item component will visualize the item name with price (amount + currency) which means that the smart/container component
+needs to retrieve these values.
+
+First we need to define `Fragments` that represent the dumb components data requirements:
+
+[ItemPrice fragment](src/components/item-price/item-price.fragment.graphql)
+
+```graphql
+fragment ItemPrice on Price {
+  amount
+  currency
+}
+```
+
+[Item fragment](src/components/item/item.fragment.graphql)
+
+```graphql
+fragment ItemFull on Item {
+  id
+  name
+  price {
+    ...ItemPrice
+  }
+}
+```
+
+`@graphql-codegen` will generate fragment types that can be used in the props interface of the dumb components. This creates
+compile-time coupling between fields required by the components and query definitions.
+
+Codegen output:
+
+```typescript
+export type GQLItemPriceFragment = { __typename?: "Price" } & Pick<
+  GQLPrice,
+  "amount" | "currency"
+>;
+
+export type GQLItemFullFragment = { __typename?: "Item" } & Pick<
+  GQLItem,
+  "id" | "name"
+> & { price: { __typename?: "Price" } & GQLItemPriceFragment };
+```
+
+These fragment types can now be used in the coupled components:
+
+```typescript jsx
+export interface ItemPriceProps {
+  price: GQLItemPriceFragment;
+}
+
+export const ItemPrice: React.FC<ItemPriceProps> = ({
+  price: { amount, currency }
+}) => {
+  return (
+    <div>
+      {amount} {currency}
+    </div>
+  );
+};
+```
+
+```typescript jsx
+interface ItemProps {
+  item: GQLItemFullFragment;
+  onAddToCart: (id: string) => void;
+}
+
+export const Item: React.FC<ItemProps> = ({
+  item: { price, ...item },
+  onAddToCart
+}) => {
+  return (
+    <div>
+      <h4>{item.name}</h4>
+      <ItemPrice price={price} />
+      <button onClick={() => onAddToCart(item.id)}>Add to cart</button>
+    </div>
+  );
+};
+
+```
+
+As soon as a fragment or query gets updated, TypeScript can immediately detect if the changes are compatible with
+component implementations.
+
+### Smart/container components
+
+Properties:
+
+- Queries/mutates data via GraphQL
+- Is coupled to query/mutation files (.graphql)
+- Composition of Dumb/UI components
+- Handles events of Dumb/UI components
+
+#### Item example
+
+To show a `List` of `Items` and `ItemPrices` a smart component needs make sure the data requirements of the children are
+met by including the fragments in the query.
+
+[Item query](src/components/item-price/item-price.fragment.graphql)
+
+```graphql
+query Items {
+  allItems {
+    ...ItemFull # This fragment also contains the ItemPrice
+  }
+}
+```
+
+The `@graphql-codegen` generates a Hook for this query which will be used by the `Items` component:
+
+```typescript jsx
+export function useItemsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<GQLItemsQuery, GQLItemsQueryVariables>) {
+        return ApolloReactHooks.useQuery<GQLItemsQuery, GQLItemsQueryVariables>(ItemsDocument, baseOptions);
+```
+
+Now all the smart component needs to do is compose the UI / dumb components, bind the data to the dumb children and handle
+the loading / error states of the query.
+
+```typescript jsx
+export const Items: React.FC = () => {
+  const { data, loading, error } = useItemsQuery({
+    context: {
+      /**
+       *  We don't want to batch this expensive call.
+       */
+      batch: false
+    }
+  });
+
+  if (loading) {
+    return <p>Loading</p>;
+  }
+
+  if (error) {
+    return <p>Error</p>;
+  }
+
+  return (
+    data && (
+      <List>
+        {data.allItems.map(item => (
+          <ListItem key={item.id}>
+            <Item item={item} />
+          </ListItem>
+        ))}
+      </List>
+    )
+  );
+};
+```
+If TypeScript compiles, we can be sure that everything connects properly.
