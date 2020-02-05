@@ -699,6 +699,7 @@ Conclusion:
 - Server can optimize backend system calls because queries are sent within the same request.
 
 ## Client components
+This chapter will demonstrate how to add separation of concerns to components in combination with GraphQL.
 
 The following examples only work with the `data-loader-server` because the `opimized-loader-server` hacky implementation
 does not support Fragments (it could if more effort is put into it).
