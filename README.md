@@ -770,7 +770,7 @@ export const List: React.FC<ListProps> = ({
 
 Simple list (styled according to house style)
 
-```typescript jsx
+```typescript 
 <List>
   <ListItem>Item 1</ListItem>
   <ListItem>Item 2</ListItem>
@@ -780,7 +780,7 @@ Simple list (styled according to house style)
 
 List with custom functionality
 
-```typescript jsx
+```typescript 
 <List highlightOnHover={true}>
   <ListItem>Yo</ListItem>
   <ListItem>Yo</ListItem>
@@ -789,7 +789,7 @@ List with custom functionality
 
 List with \<ul> functionality
 
-```typescript jsx
+```typescript 
 <List onClick={() => {}} onMouseOver={() => {}}>
   <ListItem>Yo</ListItem>
   <ListItem>Yo</ListItem>
@@ -875,7 +875,7 @@ export type GQLItemFullFragment = { __typename?: "Item" } & Pick<
 
 These fragment types can now be used in the coupled components:
 
-```typescript jsx
+```typescript 
 export interface ItemPriceProps {
   price: GQLItemPriceFragment;
 }
@@ -891,7 +891,7 @@ export const ItemPrice: React.FC<ItemPriceProps> = ({
 };
 ```
 
-```typescript jsx
+```typescript 
 interface ItemProps {
   item: GQLItemFullFragment;
   onAddToCart: (id: string) => void;
@@ -941,7 +941,7 @@ query Items {
 
 The `@graphql-codegen` generates a Hook for this query which will be used by the `Items` component:
 
-```typescript jsx
+```typescript 
 export function useItemsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<GQLItemsQuery, GQLItemsQueryVariables>) {
         return ApolloReactHooks.useQuery<GQLItemsQuery, GQLItemsQueryVariables>(ItemsDocument, baseOptions);
 ```
@@ -949,7 +949,7 @@ export function useItemsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<GQ
 Now all the smart component needs to do is compose the UI / dumb components, bind the data to the dumb children and handle
 the loading / error states of the query.
 
-```typescript jsx
+```typescript 
 export const Items: React.FC = () => {
   const { data, loading, error } = useItemsQuery({
     context: {
