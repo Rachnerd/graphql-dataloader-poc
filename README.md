@@ -8,20 +8,20 @@ All servers and clients use the same [schema.graphql](servers/schema.graphql)
 
 Each server example can be called via the playground (http://localhost:4000) or a client.
 
-- [Data-loader](#markdown-header-data-loader-server)
-- [Server performance](#markdown-header-server-side-performance)
-    - [Naive server](#markdown-header-naive-server-implementation)
-    - [Data-loader server](#markdown-header-data-loader-server-implementation)
-    - [Optimized data-loader server](#markdown-header-optimized-data-loader-server-anti-pattern)
+- [Data-loader](#data-loader-server)
+- [Server performance](#server-side-performance)
+    - [Naive server](#naive-server-implementation)
+    - [Data-loader server](#data-loader-server-implementation)
+    - [Optimized data-loader server](#optimized-data-loader-server-anti-pattern)
 
-- [Client performance](#markdown-header-client-side-performance)
-    - [Http client](#markdown-header-http-client)
-    - [Batch client](#markdown-header-batch-client)
-    - [Http/Batch split client](#markdown-header-httpbatch-split-client)
-- [Client components](#markdown-header-client-components)
-    - [UI components](#markdown-header-ui-components)
-    - [Dumb/presenter components](#markdown-header-dumbpresenter-components)
-    - [Smart/container components](#markdown-header-smartcontainer-components)
+- [Client performance](#client-side-performance)
+    - [Http client](#http-client)
+    - [Batch client](#batch-client)
+    - [Http/Batch split client](#httpbatch-split-client)
+- [Client components](#client-components)
+    - [UI components](#ui-components)
+    - [Dumb/presenter components](#dumbpresenter-components)
+    - [Smart/container components](#smartcontainer-components)
     
 ## Data-loader (server)
 
@@ -911,7 +911,6 @@ export const Item: React.FC<ItemProps> = ({
     </div>
   );
 };
-
 ```
 
 As soon as a fragment or query gets updated, TypeScript can immediately detect if the changes are compatible with
