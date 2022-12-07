@@ -34,7 +34,7 @@
     "react-dom": "^16.12.0"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "1.11.0",
+    "@graphql-codegen/cli": "1.21.8",
     "@graphql-codegen/schema-ast": "1.11.0",
     "@graphql-codegen/typescript": "1.11.0",
     "@graphql-codegen/typescript-operations": "1.11.0",
